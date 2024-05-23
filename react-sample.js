@@ -1,43 +1,51 @@
 import React, { useState } from 'react';
 
-const FileUpload = () => {
+const FileUpload = ({ allowMultiple }) => {
     const [file, setFile] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const validateFileInput = (file) => {
-        const validFileTypes = ['text/csv', 'text/plain', 'application/octet-stream'];
-        const validExtensions = ['csv', 'txt', 'fl2', 'FL2', 'patch'];
-        const maxFileSize = 5 * 1024 * 1024; // 5 MB
+    const validFileExtensions = ['csv', 'txt', 'fl2', 'FL2', 'patch'];
 
+    const validateFileInput = (file) => {
         const fileExtension = file.name.split('.').pop();
-        const isValidExtension = validExtensions.includes(fileExtension);
+        const isValidExtension = validFileExtensions.includes(fileExtension);
 
         if (!isValidExtension) {
-            return 'Invalid file type. Please upload a .csv, .txt, .fl2, .FL2, or .patch file.';
-        }
-
-        if (!validFileTypes.includes(file.type) && fileExtension !== 'fl2' && fileExtension !== 'FL2' && fileExtension !== 'patch') {
-            return 'Invalid file type. Please upload a .csv, .txt, .fl2, .FL2, or .patch file.';
-        }
-
-        if (file.size > maxFileSize) {
-            return 'File size exceeds the limit of 5MB.';
+            return `${file.name}: Invalid file type. Please upload a .csv, .txt, .fl2, .FL2, or .patch file.`;
         }
 
         return '';
     };
 
-    const handleFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-        const validationError = validateFileInput(selectedFile);
+    const validateFileContent = (fileContent) => {
+        const xssPattern = /<[^>]*script.*?>|<[^>]*iframe.*?>|<[^>]*object.*?>|<[^>]*embed.*?>|<[^>]*form.*?>|<[^>]*img.*?>|<[^>]*input.*?>|<[^>]*style.*?>|javascript:|data:/i;
+        if (xssPattern.test(fileContent)) {
+            return 'File contains potentially malicious content.';
+        }
+        return '';
+    };
 
+    const handleFileChange = async (event) => {
+        const selectedFile = event.target.files[0];
+        if (!selectedFile) return;
+
+        const validationError = validateFileInput(selectedFile);
         if (validationError) {
             setErrorMessage(validationError);
             setFile(null);
-        } else {
-            setErrorMessage('');
-            setFile(selectedFile);
+            return;
         }
+
+        const fileContent = await selectedFile.text();
+        const contentError = validateFileContent(fileContent);
+        if (contentError) {
+            setErrorMessage(`${selectedFile.name}: ${contentError}`);
+            setFile(null);
+            return;
+        }
+
+        setErrorMessage('');
+        setFile(selectedFile);
     };
 
     const handleSubmit = (event) => {
@@ -57,7 +65,9 @@ const FileUpload = () => {
                     accept=".csv,.txt,.fl2,.FL2,.patch"
                     required
                 />
-                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+                {errorMessage && (
+                    <p style={{ color: 'red' }}>{errorMessage}</p>
+                )}
                 <button type="submit" disabled={!file}>Upload</button>
             </form>
         </div>
@@ -65,7 +75,6 @@ const FileUpload = () => {
 };
 
 export default FileUpload;
-
 
 
 import React, { useState } from 'react';
