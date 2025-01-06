@@ -40,3 +40,21 @@ driver.quit()
     for char in username:
         username_field.send_keys(char)
         time.sleep(0.2)  # Adjust delay between keystrokes (0.2 seconds here)
+
+
+# Wait for the title to contain "my title"
+def wait_for_title(driver, expected_title, timeout=10):
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.title_contains(expected_title)  # Wait until title contains the expected text
+        )
+        print(f"Title contains '{expected_title}'.")
+    except Exception as e:
+        print(f"An error occurred while waiting for the title: {e}")
+        raise  # Optional: Raise the error to stop the test
+
+# Example usage
+wait_for_title(driver, "my title")
+
+# Optionally, assert if you want to enforce the check:
+assert "my title" in driver.title
