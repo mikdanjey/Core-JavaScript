@@ -33,3 +33,10 @@ input("Press Enter to close the browser...")
 
 # Quit the driver (optional if you want to close it)
 driver.quit()
+
+
+ # Step 3: Slow typing into the username field
+    username = "your-username"  # Replace with the desired username
+    for char in username:
+        username_field.send_keys(char)
+        time.sleep(0.2)  # Adjust delay between keystrokes (0.2 seconds here)
